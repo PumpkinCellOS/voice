@@ -70,6 +70,7 @@ int main()
     int amplitude_offset = 1000;
     float zoom = 1;
 
+    // TODO: Do not hardcode window size!
     sf::RenderWindow window(sf::VideoMode(1920, 1000), "3D");
 
     while (window.isOpen())
@@ -101,6 +102,13 @@ int main()
         }
 
         window.clear();
+
+        const sf::Color COLOR_GRAY(100, 100, 100);
+        sf::Vertex line[] = {
+            sf::Vertex(sf::Vector2f(0, amplitude_offset), COLOR_GRAY),
+            sf::Vertex(sf::Vector2f(1920, amplitude_offset), COLOR_GRAY)
+        };
+        window.draw(line, 2, sf::Lines);
 
         for(unsigned int i = time_offset; i < (input.size() / 2)-1; i++)
         {
