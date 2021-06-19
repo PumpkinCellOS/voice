@@ -144,7 +144,7 @@ int main()
 
         size_t displayed_samples = 1920*zoom;
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
-        for(int i = (int)t*zoom; i < samples / 2; i++)
+        for(int i = (int)t*zoom; i < std::min(samples, (int)(t*zoom+displayed_samples)); i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f(i/zoom-t, -vec2[i].real()/zoom+a)),
