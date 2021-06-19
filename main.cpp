@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include <memory>
@@ -84,11 +85,11 @@ int main()
     sf::Sound sound1;
     sound1.setBuffer(buffer);
 
-    sound1.play();
+    //sound1.play();
 
     float t = 0;
     int a = 1000;
-    float b = 1;
+    float zoom = 1;
 
     vec2.resize(samples);
 
@@ -121,10 +122,10 @@ int main()
             }
             else if (event.type == sf::Event::MouseWheelScrolled)
             {
-                if (event.mouseWheelScroll.delta > 0 && b > 0.01)
-                    b /= 2;
+                if (event.mouseWheelScroll.delta > 0 && zoom > 0.01)
+                    zoom /= 2;
                 else if (event.mouseWheelScroll.delta < 0)
-                    b *= 2;
+                    zoom *= 2;
             }
             else if (event.type == sf::Event::Closed)
                 window.close();
@@ -132,33 +133,34 @@ int main()
 
         window.clear();
 
-        for(int i = (int)t; i < samples; i++)
-        {
-            sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f(i/b-t, -vec2[i].real()/b+a)),
-                sf::Vertex(sf::Vector2f(i/b+1-t, -vec2[i+1].real()/b+a))
-            };
-            window.draw(line, 2, sf::Lines);
-
-            if(i % 100 == 0 && i-t+200 >= 0 && i-t <= 1920)
-            {
-                sf::Text text(to_string(i), font);
-                text.setCharacterSize(10);
-                text.setStyle(sf::Text::Bold);
-                text.setFillColor(sf::Color::White);
-                text.setPosition(i/b-t, 10);
-                // Draw it
-                window.draw(text);
-            }
-        }
-
         for(unsigned int i = t; i < vec.size()-1; i++)
         {
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f(i/b-t, -vec[i]/b+a), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f(i/b+1-t, -vec[i+1]/b+a), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f(i/zoom-t, -vec[i]/zoom+a), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f(i/zoom+1-t, -vec[i+1]/zoom+a), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
+        }
+
+        size_t displayed_samples = 1920*zoom;
+        size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
+        for(int i = (int)t; i < samples; i++)
+        {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(i/zoom-t, -vec2[i].real()/zoom+a)),
+                sf::Vertex(sf::Vector2f(i/zoom+1-t, -vec2[i+1].real()/zoom+a))
+            };
+            window.draw(line, 2, sf::Lines);
+
+            if(i % step == 0 && i-t+200 >= 0)
+            {
+                sf::Text text(to_string(i), font);
+                text.setCharacterSize(14);
+                text.setStyle(sf::Text::Bold);
+                text.setFillColor(sf::Color::White);
+                text.setPosition(i/zoom-t, 10);
+                window.draw(text);
+            }
         }
         window.display();
     }
