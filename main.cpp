@@ -105,7 +105,6 @@ int main()
 
     while (window.isOpen())
     {
-
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -135,9 +134,10 @@ int main()
 
         for(unsigned int i = t*zoom; i < (vec.size() / 2)-1; i++)
         {
+            constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f(i/zoom-t, -vec[i]/zoom+a), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f(i/zoom+1-t, -vec[i+1]/zoom+a), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f(i/zoom-t, -vec[i]/WAVE_SCALE/zoom+a), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f(i/zoom+1-t, -vec[i+1]/WAVE_SCALE/zoom+a), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
