@@ -25,6 +25,12 @@ void sinthesize(vector<cd>& data, double n)
         val /= n2;
         data[i] = cd(10.0 * log10(val), data[i].imag());
     }
+
+    // Clamp everything to 0.
+    for (auto& sample: data)
+    {
+        sample = cd(std::max(0.0, sample.real()), std::max(0.0, sample.imag()));
+    }
 }
 
 float calSine(int a, float x)
