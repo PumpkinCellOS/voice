@@ -152,7 +152,7 @@ int main()
             };
             window.draw(line, 2, sf::Lines);
 
-            if(i % step == 0 && i-t+200 >= 0)
+            if(i % step == 0)
             {
                 sf::Text text(to_string(i), font);
                 text.setCharacterSize(14);
