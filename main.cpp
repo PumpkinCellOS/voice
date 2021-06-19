@@ -87,8 +87,8 @@ int main()
 
     //sound1.play();
 
-    float t = 0;
-    int a = 1000;
+    float time_offset = 0;
+    int amplitude_offset = 1000;
     float zoom = 1;
 
     vec2.resize(samples);
@@ -111,14 +111,14 @@ int main()
             if (event.type == sf::Event::KeyPressed)
             {
                 if (event.key.code == sf::Keyboard::D)
-                    t+=30*zoom;
+                    time_offset+=30*zoom;
                 else if (event.key.code == sf::Keyboard::A)
-                    t-=30*zoom;
+                    time_offset-=30*zoom;
                 else if (event.key.code == sf::Keyboard::W)
-                    a+=30;
+                    amplitude_offset+=30;
                 else if (event.key.code == sf::Keyboard::S)
-                    a-=30;
-                t = std::max(std::min(t, static_cast<float>(samples)), 0.f);
+                    amplitude_offset-=30;
+                time_offset = std::max(std::min(time_offset, static_cast<float>(samples)), 0.f);
             }
             else if (event.type == sf::Event::MouseWheelScrolled)
             {
@@ -133,23 +133,23 @@ int main()
 
         window.clear();
 
-        for(unsigned int i = t; i < (vec.size() / 2)-1; i++)
+        for(unsigned int i = time_offset; i < (vec.size() / 2)-1; i++)
         {
             constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-t)/zoom, -vec[i]/WAVE_SCALE/zoom+a), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f((i-t)/zoom+1, -vec[i+1]/WAVE_SCALE/zoom+a), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -vec[i]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -vec[i+1]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
 
         size_t displayed_samples = 1920*zoom;
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
-        for(int i = (int)t; i < std::min(samples/2, (int)(t+displayed_samples)); i++)
+        for(int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
         {
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-t)/zoom, -vec2[i].real()/zoom+a)),
-                sf::Vertex(sf::Vector2f((i-t)/zoom+1, -vec2[i+1].real()/zoom+a))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -vec2[i].real()/zoom+amplitude_offset)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -vec2[i+1].real()/zoom+amplitude_offset))
             };
             window.draw(line, 2, sf::Lines);
 
@@ -159,7 +159,7 @@ int main()
                 text.setCharacterSize(14);
                 text.setStyle(sf::Text::Bold);
                 text.setFillColor(sf::Color::White);
-                text.setPosition((i-t)/zoom, 10);
+                text.setPosition((i-time_offset)/zoom, 10);
                 window.draw(text);
             }
         }
