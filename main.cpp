@@ -72,10 +72,13 @@ int main()
     fft::fft(output.begin(), output.end(), input.begin(), input.end());
     sinthesize(output, double(output.size()));
 
-    // Display result
+    // Display
     float time_offset = 0;
     int amplitude_offset = 1000;
     float zoom = 1;
+
+    bool dragging = false;
+    sf::Vector2i lastMousePos;
 
     // TODO: Do not hardcode window size!
     sf::RenderWindow window(sf::VideoMode(1920, 1000), "3D");
@@ -95,7 +98,6 @@ int main()
                     amplitude_offset+=30;
                 else if (event.key.code == sf::Keyboard::S)
                     amplitude_offset-=30;
-                time_offset = std::max(std::min(time_offset, static_cast<float>(samples)), 0.f);
             }
             else if (event.type == sf::Event::MouseWheelScrolled)
             {
@@ -106,7 +108,27 @@ int main()
             }
             else if (event.type == sf::Event::Closed)
                 window.close();
+            else if (event.type == sf::Event::MouseButtonPressed)
+            {
+                dragging = true;
+                lastMousePos = {event.mouseButton.x, event.mouseButton.y};
+            }
+            else if (event.type == sf::Event::MouseButtonReleased)
+            {
+                dragging = false;
+            }
+            else if (event.type == sf::Event::MouseMoved)
+            {
+                if(dragging)
+                {
+                    // TODO: Amplitude should be affected by zoom
+                    time_offset += (lastMousePos.x - event.mouseMove.x) * zoom;
+                    amplitude_offset -= (lastMousePos.y - event.mouseMove.y);
+                    lastMousePos = { event.mouseMove.x, event.mouseMove.y };
+                }
+            }
         }
+        time_offset = std::max(std::min(time_offset, static_cast<float>(samples)), 0.f);
 
         window.clear();
 
