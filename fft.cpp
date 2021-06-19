@@ -1,6 +1,11 @@
 #include "fft.h"
 
+#include "math.h"
+
 #include <cmath>
+
+namespace fft
+{
 
 void fft(Iterator Xbegin, Iterator Xend, ConstIterator xbegin, ConstIterator xend, int s)
 {
@@ -16,9 +21,11 @@ void fft(Iterator Xbegin, Iterator Xend, ConstIterator xbegin, ConstIterator xen
             auto& begin_k = *(Xbegin + k);
             auto& begin_k_n_2 = *(Xbegin + k + N/2.0);
             auto p = begin_k;
-            auto q = exp(complex<double>(-2*M_PI*complex<double>(0, 1)*k/N)) * begin_k_n_2;
+            auto q = exp(complex<double>(-2*PI*complex<double>(0, 1)*k/N)) * begin_k_n_2;
             begin_k = p + q;
             begin_k_n_2 = p - q;
         }
     }
+}
+
 }

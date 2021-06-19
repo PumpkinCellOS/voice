@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "fft.h"
+#include "math.h"
 
 using namespace std;
 
@@ -14,22 +15,22 @@ constexpr float sines[3][6] = {
     {2000, 3000, 1500, 2500, 3500, 1000},
 };
 
-void sinthesize(vector<cd>& data, double n)
+void sinthesize(vector<fft::DoubleComplex>& data, double n)
 {
     double n2 = n * n;
-    data[0] = cd(10.0 * log10(data[0].real() * data[0].real() / n2), data[0].imag());
-    data[n / 2] = cd(10.0 * log10(data[1].real() * data[1].real() / n2), data[n/2].imag());
+    data[0] = fft::DoubleComplex(10.0 * log10(data[0].real() * data[0].real() / n2), data[0].imag());
+    data[n / 2] = fft::DoubleComplex(10.0 * log10(data[1].real() * data[1].real() / n2), data[n/2].imag());
     for (int i = 1; i < n / 2; i++)
     {
         double val = data[i * 2].real() * data[i * 2].real() + data[i * 2 + 1].real() * data[i * 2 + 1].real();
         val /= n2;
-        data[i] = cd(10.0 * log10(val), data[i].imag());
+        data[i] = fft::DoubleComplex(10.0 * log10(val), data[i].imag());
     }
 
     // Clamp everything to 0.
     for (auto& sample: data)
     {
-        sample = cd(std::max(0.0, sample.real()), std::max(0.0, sample.imag()));
+        sample = fft::DoubleComplex(std::max(0.0, sample.real()), std::max(0.0, sample.imag()));
     }
 }
 
@@ -57,7 +58,7 @@ int main()
             t += calSine(j, i);
         }
         input.push_back(int16_t(t));
-        output.push_back(cd(t));
+        output.push_back(fft::DoubleComplex(t));
     }
 
     // Setup SFML buffer
@@ -68,7 +69,7 @@ int main()
 
     // Calculate FFT of input
     output.resize(samples);
-    fft(output.begin(), output.end(), input.begin(), input.end());
+    fft::fft(output.begin(), output.end(), input.begin(), input.end());
     sinthesize(output, double(output.size()));
 
     // Display result
