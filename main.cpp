@@ -111,24 +111,22 @@ int main()
             if (event.type == sf::Event::KeyPressed)
             {
                 if (event.key.code == sf::Keyboard::D && t < 131072)
-                    t+=b*10;
-                if (event.key.code == sf::Keyboard::A && t > 0)
-                    t-=b*10;
-                if (event.key.code == sf::Keyboard::W)
-                    a+=b*10;
-                if (event.key.code == sf::Keyboard::S)
-                    a-=b*10;
-                if (event.key.code == sf::Keyboard::E && b > 1)
-                    b+=1;
-                if (event.key.code == sf::Keyboard::Q && b > 1)
-                    b-=1;
-                if (event.key.code == sf::Keyboard::Q && b <= 1 && b > 0)
-                    b-=0.05;
-                if (event.key.code == sf::Keyboard::E && b <= 1)
-                    b+=0.05;
+                    t+=30;
+                else if (event.key.code == sf::Keyboard::A && t > 0)
+                    t-=30;
+                else if (event.key.code == sf::Keyboard::W)
+                    a+=30;
+                else if (event.key.code == sf::Keyboard::S)
+                    a-=30;
             }
-
-            if (event.type == sf::Event::Closed)
+            else if (event.type == sf::Event::MouseWheelScrolled)
+            {
+                if (event.mouseWheelScroll.delta > 0 && b > 0.01)
+                    b /= 2;
+                else if (event.mouseWheelScroll.delta < 0)
+                    b *= 2;
+            }
+            else if (event.type == sf::Event::Closed)
                 window.close();
         }
 
