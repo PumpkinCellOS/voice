@@ -133,7 +133,7 @@ int main()
 
         window.clear();
 
-        for(unsigned int i = t; i < vec.size()-1; i++)
+        for(unsigned int i = t*zoom; i < (vec.size() / 2)-1; i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f(i/zoom-t, -vec[i]/zoom+a), sf::Color(255, 0, 0)),
@@ -144,7 +144,7 @@ int main()
 
         size_t displayed_samples = 1920*zoom;
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
-        for(int i = (int)t; i < samples; i++)
+        for(int i = (int)t*zoom; i < samples / 2; i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f(i/zoom-t, -vec2[i].real()/zoom+a)),
