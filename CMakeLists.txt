@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(SFML 2.5 COMPONENTS audio graphics REQUIRED)
 add_executable(Voice
+    "fft.cpp"
     "main.cpp"
 )
 target_link_libraries(Voice sfml-audio sfml-graphics)

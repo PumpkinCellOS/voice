@@ -2,58 +2,28 @@
 #include <SFML/Audio.hpp>
 #include <algorithm>
 #include <vector>
-#include <cmath>
-#include <memory>
 #include <iostream>
-#include <complex>
+
+#include "fft.h"
 
 using namespace std;
 
-float sines[3][6] = {
-                   {900, 1200, 2500, 5000, 7200, 9100},
-                   {0.2, 0.5, 0, 0.1, 1, 0.2},
-                   {2000, 3000, 1500, 2500, 3500, 1000},
-                    };
+constexpr float sines[3][6] = {
+    {900, 1200, 2500, 5000, 7200, 9100},
+    {0.2, 0.5, 0, 0.1, 1, 0.2},
+    {2000, 3000, 1500, 2500, 3500, 1000},
+};
 
-vector<int16_t> vec;
-vector<complex<double>> vec2;
-
-using cd = complex<double>;
-const double PI = acos(-1);
-
-using Iterator = vector<complex<double>>::iterator;
-using ConstIterator = vector<int16_t>::const_iterator;
-
-void fft(Iterator Xbegin, Iterator Xend, ConstIterator xbegin, ConstIterator xend, int s = 1)
-{
-    double N = xend - xbegin;
-    if(N == 1)
-        *Xbegin = complex<double>(*xbegin);
-    else
-    {
-        fft(Xbegin, Xbegin + N/2.0, xbegin, xbegin + N/2.0, 2*s);
-        fft(Xbegin + N/2.0, Xend, xbegin + s, xbegin + s + N/2.0, 2*s);
-        for(double k = 0; k < N/2.0; k++)
-        {
-            auto& begin_k = *(Xbegin + k);
-            auto& begin_k_n_2 = *(Xbegin + k + N/2.0);
-            auto p = begin_k;
-            auto q = exp(complex<double>(-2*M_PI*complex<double>(0, 1)*k/N)) * begin_k_n_2;
-            begin_k = p + q;
-            begin_k_n_2 = p - q;
-        }
-    }
-}
-
-void sinthesize(double n)
+void sinthesize(vector<cd>& data, double n)
 {
     double n2 = n * n;
-    vec2[0] = cd(10.0 * log10(vec2[0].real() * vec2[0].real() / n2), vec2[0].imag());
-    vec2[n / 2] = cd(10.0 * log10(vec2[1].real() * vec2[1].real() / n2), vec2[n/2].imag());
-    for (int i = 1; i < n / 2; i++) {
-        double val = vec2[i * 2].real() * vec2[i * 2].real() + vec2[i * 2 + 1].real() * vec2[i * 2 + 1].real();
+    data[0] = cd(10.0 * log10(data[0].real() * data[0].real() / n2), data[0].imag());
+    data[n / 2] = cd(10.0 * log10(data[1].real() * data[1].real() / n2), data[n/2].imag());
+    for (int i = 1; i < n / 2; i++)
+    {
+        double val = data[i * 2].real() * data[i * 2].real() + data[i * 2 + 1].real() * data[i * 2 + 1].real();
         val /= n2;
-        vec2[i] = cd(10.0 * log10(val), vec2[i].imag());
+        data[i] = cd(10.0 * log10(val), data[i].imag());
     }
 }
 
@@ -64,42 +34,41 @@ float calSine(int a, float x)
 
 int main()
 {
+    // Load font
     sf::Font font;
     font.loadFromFile("arial.ttf");
 
-    sf::SoundBuffer buffer;
+    constexpr int samples = 131072;
 
-    int samples = 131072;
-
-    for(int i = 0; i < samples; i++){
+    // Generate input
+    vector<int16_t> input;
+    vector<complex<double>> output;
+    for(int i = 0; i < samples; i++)
+    {
         float t = 0;
-        for(int j = 0; j < 6; j++){
-            t+=calSine(j, i);
+        for(int j = 0; j < 6; j++)
+        {
+            t += calSine(j, i);
         }
-        vec.push_back(int16_t(t));
-        vec2.push_back(cd(t));
+        input.push_back(int16_t(t));
+        output.push_back(cd(t));
     }
 
-    buffer.loadFromSamples(vec.data(), vec.size(), 1, 44100);
-
+    // Setup SFML buffer
+    sf::SoundBuffer buffer;
+    buffer.loadFromSamples(input.data(), input.size(), 1, 44100);
     sf::Sound sound1;
     sound1.setBuffer(buffer);
 
-    //sound1.play();
+    // Calculate FFT of input
+    output.resize(samples);
+    fft(output.begin(), output.end(), input.begin(), input.end());
+    sinthesize(output, double(output.size()));
 
+    // Display result
     float time_offset = 0;
     int amplitude_offset = 1000;
     float zoom = 1;
-
-    vec2.resize(samples);
-
-    fft(vec2.begin(), vec2.end(), vec.begin(), vec.end());
-
-    sinthesize(double(vec2.size()));
-
-    cout << endl;
-
-    //int samplerate = buffer.getSampleRate();
 
     sf::RenderWindow window(sf::VideoMode(1920, 1000), "3D");
 
@@ -133,12 +102,12 @@ int main()
 
         window.clear();
 
-        for(unsigned int i = time_offset; i < (vec.size() / 2)-1; i++)
+        for(unsigned int i = time_offset; i < (input.size() / 2)-1; i++)
         {
             constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -vec[i]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -vec[i+1]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -input[i]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -input[i+1]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
@@ -148,8 +117,8 @@ int main()
         for(int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
         {
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -vec2[i].real()/zoom+amplitude_offset)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -vec2[i+1].real()/zoom+amplitude_offset))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -output[i].real()/zoom+amplitude_offset)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -output[i+1].real()/zoom+amplitude_offset))
             };
             window.draw(line, 2, sf::Lines);
 
