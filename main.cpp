@@ -142,7 +142,8 @@ int main()
             };
             window.draw(line, 2, sf::Lines);
 
-            if(i % 100 == 0 && i-t+200 >= 0 && i-t <= 1920){
+            if(i % 100 == 0 && i-t+200 >= 0 && i-t <= 1920)
+            {
                 sf::Text text(to_string(i), font);
                 text.setCharacterSize(10);
                 text.setStyle(sf::Text::Bold);
@@ -152,7 +153,6 @@ int main()
                 window.draw(text);
             }
         }
-        window.display();
 
         for(unsigned int i = t; i < vec.size()-1; i++)
         {
@@ -162,6 +162,7 @@ int main()
             };
             window.draw(line, 2, sf::Lines);
         }
+        window.display();
     }
     return 0;
 }
