@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
     // Calculate
     fft_calculation->calculate();
     size_t sample_count = fft_calculation->output().size();
+    size_t sample_rate = fft_calculation->sample_rate();
 
     // Display
     float time_offset = 0;
@@ -203,7 +204,7 @@ int main(int argc, char* argv[])
 
             if (i % step == 0)
             {
-                sf::Text text(to_string(i), font);
+                sf::Text text(to_string(static_cast<unsigned>(i * 2 / (static_cast<double>(sample_count) / sample_rate))), font);
                 text.setCharacterSize(14);
                 text.setStyle(sf::Text::Bold);
                 text.setFillColor(sf::Color::White);
