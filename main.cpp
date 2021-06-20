@@ -15,25 +15,6 @@ constexpr float sines[3][6] = {
     {2000, 3000, 1500, 2500, 3500, 1000},
 };
 
-void sinthesize(vector<fft::DoubleComplex>& data, double n)
-{
-    double n2 = n * n;
-    data[0] = fft::DoubleComplex(10.0 * log10(data[0].real() * data[0].real() / n2), data[0].imag());
-    data[n / 2] = fft::DoubleComplex(10.0 * log10(data[1].real() * data[1].real() / n2), data[n/2].imag());
-    for (int i = 1; i < n / 2; i++)
-    {
-        double val = data[i * 2].real() * data[i * 2].real() + data[i * 2 + 1].real() * data[i * 2 + 1].real();
-        val /= n2;
-        data[i] = fft::DoubleComplex(10.0 * log10(val), data[i].imag());
-    }
-
-    // Clamp everything to 0.
-    for (auto& sample: data)
-    {
-        sample = fft::DoubleComplex(std::max(0.0, sample.real()), std::max(0.0, sample.imag()));
-    }
-}
-
 float calSine(int a, float x)
 {
     return (sin(sines[0][a]*PI*((x/44100)-(PI/2)-sines[1][a]))+1)*sines[2][a];
@@ -69,8 +50,8 @@ int main()
 
     // Calculate FFT of input
     output.resize(samples);
-    fft::fft(output.begin(), output.end(), input.begin(), input.end());
-    sinthesize(output, double(output.size()));
+    fft::fft(output, input, samples);
+    fft::synthesize(output);
 
     // Display
     float time_offset = 0;
@@ -139,7 +120,7 @@ int main()
         };
         window.draw(line, 2, sf::Lines);
 
-        for(unsigned int i = time_offset; i < (input.size() / 2)-1; i++)
+        for (unsigned int i = time_offset; i < (input.size() / 2)-1; i++)
         {
             constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
@@ -151,7 +132,7 @@ int main()
 
         size_t displayed_samples = 1920*zoom;
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
-        for(int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
+        for (int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom+500)),

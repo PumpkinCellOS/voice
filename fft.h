@@ -11,9 +11,7 @@ using std::vector;
 
 using DoubleComplex = complex<double>;
 
-using Iterator = vector<complex<double>>::iterator;
-using ConstIterator = vector<int16_t>::const_iterator;
-
-void fft(Iterator Xbegin, Iterator Xend, ConstIterator xbegin, ConstIterator xend, int s = 1);
+void fft(vector<DoubleComplex>& output, vector<int16_t>& input, size_t window_size, size_t offset = 0);
+void synthesize(vector<fft::DoubleComplex>& data);
 
 }
