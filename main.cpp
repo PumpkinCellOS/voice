@@ -116,8 +116,6 @@ int main(int argc, char* argv[])
     bool dragging = false;
     sf::Vector2i lastMousePos;
 
-    // TODO: Do not hardcode window size!
-
     sf::Vector2i window_size { 1920, 1000 };
     sf::RenderWindow window(sf::VideoMode(window_size.x, window_size.y), "Voice");
 
