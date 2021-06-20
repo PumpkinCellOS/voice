@@ -68,14 +68,14 @@ int main(int argc, char* argv[])
 
     std::unique_ptr<FFTCalculation> fft_calculation;
 
-    if(argc == 1)
+    if (argc == 1)
     {
         constexpr size_t generated_sample_rate = 44100;
         constexpr size_t generated_sample_count = 1 << 17;
-        for(size_t i = 0; i < generated_sample_count; i++)
+        for (size_t i = 0; i < generated_sample_count; i++)
         {
             float t = 0;
-            for(const Sine& sine: generated_sines)
+            for (const Sine& sine: generated_sines)
             {
                 t += sine.value_at(static_cast<double>(i) / generated_sample_rate);
             }
@@ -84,16 +84,16 @@ int main(int argc, char* argv[])
         }
         fft_calculation = std::make_unique<FFTCalculation>(input, output, generated_sample_rate);
     }
-    else if(argc == 2)
+    else if (argc == 2)
     {
         sf::SoundBuffer buffer;
-        if(!buffer.loadFromFile(argv[1]))
+        if (!buffer.loadFromFile(argv[1]))
         {
             std::cout << "Error: Could not load file " << argv[1] << std::endl;
             return 1;
         }
         input.resize(buffer.getSampleCount());
-        for(size_t i = 0; i < buffer.getSampleCount(); i++)
+        for (size_t i = 0; i < buffer.getSampleCount(); i++)
         {
             input[i] = buffer.getSamples()[i];
         }
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
             {
                 if (event.mouseWheelScroll.delta > 0 && zoom > 0.125)
                     zoom /= 2;
-                else if (event.mouseWheelScroll.delta < 0 && zoom < (sample_count / 1920 / 2))
+                else if (event.mouseWheelScroll.delta < 0 && zoom < (static_cast<double>(sample_count) / window_size.x / 2))
                     zoom *= 2;
             }
             else if (event.type == sf::Event::Closed)
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
             }
             else if (event.type == sf::Event::MouseMoved)
             {
-                if(dragging)
+                if (dragging)
                 {
                     time_offset += (lastMousePos.x - event.mouseMove.x) * zoom;
                     amplitude_offset += (lastMousePos.y - event.mouseMove.y) * zoom;
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
             };
             window.draw(line, 2, sf::Lines);
 
-            if(i % step == 0)
+            if (i % step == 0)
             {
                 sf::Text text(to_string(i), font);
                 text.setCharacterSize(14);
