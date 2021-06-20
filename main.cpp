@@ -9,16 +9,26 @@
 
 using namespace std;
 
-constexpr float sines[3][6] = {
-    {900, 1200, 2500, 5000, 7200, 9100},
-    {0.2, 0.5, 0, 0.1, 1, 0.2},
-    {2000, 3000, 1500, 2500, 3500, 1000},
+struct Sine
+{
+    double frequency; // [Hz]
+    double offset;     // [s]
+    double amplitude;
+
+    float value_at(float x) const
+    {
+        return (sin(frequency * PI * ((x / 44100) - (PI / 2) - offset)) + 1) * amplitude;
+    }
 };
 
-float calSine(int a, float x)
-{
-    return (sin(sines[0][a]*PI*((x/44100)-(PI/2)-sines[1][a]))+1)*sines[2][a];
-}
+constexpr Sine sines[] = {
+    {900, 0.2, 2000},
+    {1200, 0.5, 3000},
+    {2500, 0, 1500},
+    {5000, 0.1, 2500},
+    {7200, 1, 3500},
+    {9100, 0.2, 1000}
+};
 
 int main()
 {
@@ -26,17 +36,19 @@ int main()
     sf::Font font;
     font.loadFromFile("arial.ttf");
 
+    constexpr size_t sample_rate = 44100;
+    constexpr size_t sample_count = 131072;
     constexpr int samples = 131072;
 
     // Generate input
     vector<int16_t> input;
     vector<complex<double>> output;
-    for(int i = 0; i < samples; i++)
+    for(size_t i = 0; i < sample_count; i++)
     {
         float t = 0;
-        for(int j = 0; j < 6; j++)
+        for(const Sine& sine: sines)
         {
-            t += calSine(j, i);
+            t += sine.value_at(i);
         }
         input.push_back(int16_t(t));
         output.push_back(fft::DoubleComplex(t));
@@ -49,8 +61,8 @@ int main()
     sound1.setBuffer(buffer);
 
     // Calculate FFT of input
-    output.resize(samples);
-    fft::fft(output, input, samples);
+    output.resize(sample_count);
+    fft::fft(output, input, sample_count);
     fft::synthesize(output);
 
     // Display
@@ -84,7 +96,7 @@ int main()
             {
                 if (event.mouseWheelScroll.delta > 0 && zoom > 0.125)
                     zoom /= 2;
-                else if (event.mouseWheelScroll.delta < 0 && zoom < (samples / 1920 / 2))
+                else if (event.mouseWheelScroll.delta < 0 && zoom < (sample_count / 1920 / 2))
                     zoom *= 2;
             }
             else if (event.type == sf::Event::Closed)
@@ -109,7 +121,7 @@ int main()
                 }
             }
         }
-        time_offset = std::max(std::min(time_offset, static_cast<float>(samples)), 0.f);
+        time_offset = std::max(std::min(time_offset, static_cast<float>(sample_count)), 0.f);
 
         window.clear();
 
@@ -132,7 +144,7 @@ int main()
 
         size_t displayed_samples = 1920*zoom;
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
-        for (int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
+        for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)); i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom+500)),
