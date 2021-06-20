@@ -15,9 +15,9 @@ struct Sine
     double offset;     // [s]
     double amplitude;
 
-    float value_at(float x) const
+    double value_at(double x) const
     {
-        return (sin(frequency * PI * ((x / 44100) - (PI / 2) - offset)) + 1) * amplitude;
+        return (sin(frequency * PI * (x - (PI / 2) - offset)) + 1) * amplitude;
     }
 };
 
@@ -38,7 +38,6 @@ int main()
 
     constexpr size_t sample_rate = 44100;
     constexpr size_t sample_count = 131072;
-    constexpr int samples = 131072;
 
     // Generate input
     vector<int16_t> input;
@@ -48,7 +47,7 @@ int main()
         float t = 0;
         for(const Sine& sine: sines)
         {
-            t += sine.value_at(i);
+            t += sine.value_at(static_cast<double>(i) / sample_rate);
         }
         input.push_back(int16_t(t));
         output.push_back(fft::DoubleComplex(t));
@@ -56,7 +55,7 @@ int main()
 
     // Setup SFML buffer
     sf::SoundBuffer buffer;
-    buffer.loadFromSamples(input.data(), input.size(), 1, 44100);
+    buffer.loadFromSamples(input.data(), input.size(), 1, sample_rate);
     sf::Sound sound1;
     sound1.setBuffer(buffer);
 
