@@ -117,7 +117,9 @@ int main(int argc, char* argv[])
     sf::Vector2i lastMousePos;
 
     // TODO: Do not hardcode window size!
-    sf::RenderWindow window(sf::VideoMode(1920, 1000), "3D");
+
+    sf::Vector2i window_size { 1920, 1000 };
+    sf::RenderWindow window(sf::VideoMode(window_size.x, window_size.y), "3D");
 
     while (window.isOpen())
     {
@@ -162,6 +164,12 @@ int main(int argc, char* argv[])
                     lastMousePos = { event.mouseMove.x, event.mouseMove.y };
                 }
             }
+            else if (event.type == sf::Event::Resized)
+            {
+                window_size.x = event.size.width;
+                window_size.y = event.size.height;
+                window.setView(sf::View(sf::FloatRect(0, 0, window_size.x, window_size.y)));
+            }
         }
         time_offset = std::max(std::min(time_offset, static_cast<float>(sample_count)), 0.f);
 
@@ -169,8 +177,8 @@ int main(int argc, char* argv[])
 
         const sf::Color COLOR_GRAY(100, 100, 100);
         sf::Vertex line[] = {
-            sf::Vertex(sf::Vector2f(0, -amplitude_offset/zoom+500), COLOR_GRAY),
-            sf::Vertex(sf::Vector2f(1920, -amplitude_offset/zoom+500), COLOR_GRAY)
+            sf::Vertex(sf::Vector2f(0, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY),
+            sf::Vertex(sf::Vector2f(1920, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY)
         };
         window.draw(line, 2, sf::Lines);
 
@@ -178,19 +186,20 @@ int main(int argc, char* argv[])
         {
             constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-input[i]/WAVE_SCALE-amplitude_offset)/zoom+500), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-input[i+1]/WAVE_SCALE-amplitude_offset)/zoom+500), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-input[i]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-input[i+1]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
 
-        size_t displayed_samples = 1920*zoom;
-        size_t step = std::max(static_cast<size_t>(1), displayed_samples / 20);
+        size_t displayed_samples = window_size.x * zoom;
+        constexpr size_t label_spacing = 50;
+        size_t step = std::max(static_cast<size_t>(1), displayed_samples / (window_size.x / label_spacing));
         for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)); i++)
         {
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom+500)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-output[i+1].real()-amplitude_offset)/zoom+500))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom + window_size.y / 2.0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-output[i+1].real()-amplitude_offset)/zoom + window_size.y / 2.0))
             };
             window.draw(line, 2, sf::Lines);
 
