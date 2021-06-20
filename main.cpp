@@ -101,9 +101,9 @@ int main()
             }
             else if (event.type == sf::Event::MouseWheelScrolled)
             {
-                if (event.mouseWheelScroll.delta > 0 && zoom > 0.01)
+                if (event.mouseWheelScroll.delta > 0 && zoom > 0.125)
                     zoom /= 2;
-                else if (event.mouseWheelScroll.delta < 0)
+                else if (event.mouseWheelScroll.delta < 0 && zoom < (samples / 1920 / 2))
                     zoom *= 2;
             }
             else if (event.type == sf::Event::Closed)
