@@ -74,7 +74,7 @@ int main()
 
     // Display
     float time_offset = 0;
-    int amplitude_offset = 1000;
+    float amplitude_offset = 0;
     float zoom = 1;
 
     bool dragging = false;
@@ -123,7 +123,7 @@ int main()
                 {
                     // TODO: Amplitude should be affected by zoom
                     time_offset += (lastMousePos.x - event.mouseMove.x) * zoom;
-                    amplitude_offset -= (lastMousePos.y - event.mouseMove.y);
+                    amplitude_offset += (lastMousePos.y - event.mouseMove.y) * zoom;
                     lastMousePos = { event.mouseMove.x, event.mouseMove.y };
                 }
             }
@@ -134,8 +134,8 @@ int main()
 
         const sf::Color COLOR_GRAY(100, 100, 100);
         sf::Vertex line[] = {
-            sf::Vertex(sf::Vector2f(0, amplitude_offset), COLOR_GRAY),
-            sf::Vertex(sf::Vector2f(1920, amplitude_offset), COLOR_GRAY)
+            sf::Vertex(sf::Vector2f(0, -amplitude_offset/zoom+500), COLOR_GRAY),
+            sf::Vertex(sf::Vector2f(1920, -amplitude_offset/zoom+500), COLOR_GRAY)
         };
         window.draw(line, 2, sf::Lines);
 
@@ -143,8 +143,8 @@ int main()
         {
             constexpr double WAVE_SCALE = 1000;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -input[i]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -input[i+1]/WAVE_SCALE/zoom+amplitude_offset), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-input[i]/WAVE_SCALE-amplitude_offset)/zoom+500), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-input[i+1]/WAVE_SCALE-amplitude_offset)/zoom+500), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
@@ -154,8 +154,8 @@ int main()
         for(int i = (int)time_offset; i < std::min(samples/2, (int)(time_offset+displayed_samples)); i++)
         {
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, -output[i].real()/zoom+amplitude_offset)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, -output[i+1].real()/zoom+amplitude_offset))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom+500)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-output[i+1].real()-amplitude_offset)/zoom+500))
             };
             window.draw(line, 2, sf::Lines);
 
@@ -169,6 +169,7 @@ int main()
                 window.draw(text);
             }
         }
+
         window.display();
     }
     return 0;
