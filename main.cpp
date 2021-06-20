@@ -14,7 +14,7 @@ struct Sine
 {
     double frequency; // [Hz]
     double offset;     // [s]
-    double amplitude;
+    int16_t amplitude;
 
     double value_at(double x) const
     {
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 {
     // Load or generate input
     vector<int16_t> input;
-    vector<complex<double>> output;
+    vector<fft::DoubleComplex> output;
 
     std::unique_ptr<FFTCalculation> fft_calculation;
 
@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
         std::cout << "Usage: Voice [sound file]" << std::endl;
         return 1;
     }
+
     // Calculate
     fft_calculation->calculate();
     size_t sample_count = fft_calculation->output().size();
@@ -208,8 +209,7 @@ int main(int argc, char* argv[])
 
             if (i % step == 0)
             {
-                sf::Text text(to_string(static_cast<unsigned>(i * 2 / (static_cast<double>(sample_count) / sample_rate))), font);
-                text.setCharacterSize(14);
+                sf::Text text(to_string(static_cast<unsigned>(i / (static_cast<double>(sample_rate) / (sample_count / sqrt(2))))), font, 12);
                 text.setStyle(sf::Text::Bold);
                 text.setFillColor(sf::Color::White);
                 text.setPosition((i-time_offset)/zoom, 10);
