@@ -31,7 +31,7 @@ void fft_impl(OutputIterator output_begin, OutputIterator output_end, InputItera
     }
 }
 
-void fft(vector<DoubleComplex>& output, vector<int16_t>& input, size_t window_size, size_t offset)
+void fft(vector<DoubleComplex>& output, const vector<int16_t>& input, size_t window_size, size_t offset)
 {
     fft_impl(output.begin() + offset, output.begin() + offset + window_size, input.begin() + offset, input.begin() + offset + window_size, 1);
 }

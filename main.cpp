@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "fft.h"
 #include "math.h"
@@ -21,7 +22,7 @@ struct Sine
     }
 };
 
-constexpr Sine sines[] = {
+constexpr Sine generated_sines[] = {
     {900, 0.2, 2000},
     {1200, 0.5, 3000},
     {2500, 0, 1500},
@@ -30,39 +31,82 @@ constexpr Sine sines[] = {
     {9100, 0.2, 1000}
 };
 
-int main()
+class FFTCalculation
+{
+public:
+    FFTCalculation(const vector<int16_t>& input, vector<fft::DoubleComplex>& output, size_t sample_rate)
+    : m_input(input), m_output(output), m_sample_rate(sample_rate) {}
+
+    const vector<fft::DoubleComplex>& output() const { return m_output; }
+
+    void calculate();
+    size_t sample_rate() const { return m_sample_rate; }
+
+private:
+    const vector<int16_t>& m_input;
+    vector<fft::DoubleComplex>& m_output;
+    size_t m_sample_rate = 0;
+};
+
+void FFTCalculation::calculate()
+{
+    // TODO: Windowing
+    m_output.resize(m_input.size());
+    fft::fft(m_output, m_input, m_input.size());
+    fft::synthesize(m_output);
+}
+
+int main(int argc, char* argv[])
 {
     // Load font
     sf::Font font;
     font.loadFromFile("arial.ttf");
 
-    constexpr size_t sample_rate = 44100;
-    constexpr size_t sample_count = 131072;
-
-    // Generate input
+    // Load or generate input
     vector<int16_t> input;
     vector<complex<double>> output;
-    for(size_t i = 0; i < sample_count; i++)
+
+    std::unique_ptr<FFTCalculation> fft_calculation;
+
+    if(argc == 1)
     {
-        float t = 0;
-        for(const Sine& sine: sines)
+        constexpr size_t generated_sample_rate = 44100;
+        constexpr size_t generated_sample_count = 1 << 17;
+        for(size_t i = 0; i < generated_sample_count; i++)
         {
-            t += sine.value_at(static_cast<double>(i) / sample_rate);
+            float t = 0;
+            for(const Sine& sine: generated_sines)
+            {
+                t += sine.value_at(static_cast<double>(i) / generated_sample_rate);
+            }
+            input.push_back(int16_t(t));
+            output.push_back(fft::DoubleComplex(t));
         }
-        input.push_back(int16_t(t));
-        output.push_back(fft::DoubleComplex(t));
+        fft_calculation = std::make_unique<FFTCalculation>(input, output, generated_sample_rate);
     }
-
-    // Setup SFML buffer
-    sf::SoundBuffer buffer;
-    buffer.loadFromSamples(input.data(), input.size(), 1, sample_rate);
-    sf::Sound sound1;
-    sound1.setBuffer(buffer);
-
-    // Calculate FFT of input
-    output.resize(sample_count);
-    fft::fft(output, input, sample_count);
-    fft::synthesize(output);
+    else if(argc == 2)
+    {
+        sf::SoundBuffer buffer;
+        if(!buffer.loadFromFile(argv[1]))
+        {
+            std::cout << "Error: Could not load file " << argv[1] << std::endl;
+            return 1;
+        }
+        input.resize(buffer.getSampleCount());
+        for(size_t i = 0; i < buffer.getSampleCount(); i++)
+        {
+            input[i] = buffer.getSamples()[i];
+        }
+        fft_calculation = std::make_unique<FFTCalculation>(input, output, buffer.getSampleRate());
+    }
+    else
+    {
+        std::cout << "Usage: Voice [sound file]" << std::endl;
+        return 1;
+    }
+    // Calculate
+    fft_calculation->calculate();
+    size_t sample_count = fft_calculation->output().size();
 
     // Display
     float time_offset = 0;
@@ -113,7 +157,6 @@ int main()
             {
                 if(dragging)
                 {
-                    // TODO: Amplitude should be affected by zoom
                     time_offset += (lastMousePos.x - event.mouseMove.x) * zoom;
                     amplitude_offset += (lastMousePos.y - event.mouseMove.y) * zoom;
                     lastMousePos = { event.mouseMove.x, event.mouseMove.y };
