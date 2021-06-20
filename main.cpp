@@ -118,7 +118,11 @@ int main(int argc, char* argv[])
 
     // Load font
     sf::Font font;
-    font.loadFromFile("arial.ttf");
+    if (!font.loadFromFile("arial.ttf"))
+    {
+        std::cout << "Error: Failed to load font file" << std::endl;
+        return 1;
+    }
 
     while (window.isOpen())
     {
