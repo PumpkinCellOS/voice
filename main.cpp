@@ -58,10 +58,6 @@ void FFTCalculation::calculate()
 
 int main(int argc, char* argv[])
 {
-    // Load font
-    sf::Font font;
-    font.loadFromFile("arial.ttf");
-
     // Load or generate input
     vector<int16_t> input;
     vector<complex<double>> output;
@@ -118,6 +114,10 @@ int main(int argc, char* argv[])
 
     sf::Vector2i window_size { 1920, 1000 };
     sf::RenderWindow window(sf::VideoMode(window_size.x, window_size.y), "Voice");
+
+    // Load font
+    sf::Font font;
+    font.loadFromFile("arial.ttf");
 
     while (window.isOpen())
     {
