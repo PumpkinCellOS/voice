@@ -18,17 +18,22 @@ struct Sine
 
     double value_at(double x) const
     {
-        return (sin(frequency * PI * (x - (PI / 2) - offset)) + 1) * amplitude;
+        return sin(frequency * PI * (x - (PI / 2) - offset)) * amplitude;
     }
 };
 
 constexpr Sine generated_sines[] = {
-    {900, 0.2, 2000},
-    {1200, 0.5, 3000},
-    {2500, 0, 1500},
-    {5000, 0.1, 2500},
-    {7200, 1, 3500},
-    {9100, 0.2, 1000}
+    {1000, 0, 500},
+    {2000, 0, 1000},
+    {3000, 0, 1500},
+    {4000, 0, 2000},
+    {5000, 0, 2500},
+    {6000, 0, 3000},
+    {7000, 0, 3500},
+    {8000, 0, 4000},
+    {9000, 0, 4500},
+    {10000, 0, 5000},
+    {11000, 0, 5500}
 };
 
 class FFTCalculation
@@ -54,6 +59,9 @@ void FFTCalculation::calculate()
     m_output.resize(m_input.size());
     fft::fft(m_output, m_input, m_input.size());
     fft::synthesize(m_output);
+    m_output.resize(m_output.size()/2);
+
+    fft::deriative(m_output);
 }
 
 int main(int argc, char* argv[])
@@ -63,6 +71,8 @@ int main(int argc, char* argv[])
     vector<fft::DoubleComplex> output;
 
     std::unique_ptr<FFTCalculation> fft_calculation;
+
+    sf::SoundBuffer buffer;
 
     if (argc == 1)
     {
@@ -79,10 +89,14 @@ int main(int argc, char* argv[])
             output.push_back(fft::DoubleComplex(t));
         }
         fft_calculation = std::make_unique<FFTCalculation>(input, output, generated_sample_rate);
+        buffer.loadFromSamples(input.data(), input.size(), 1, 44100);
+
+        sf::Sound sound;
+        sound.setBuffer(buffer);
+        sound.play();
     }
     else if (argc == 2)
     {
-        sf::SoundBuffer buffer;
         if (!buffer.loadFromFile(argv[1]))
         {
             std::cout << "Error: Could not load file " << argv[1] << std::endl;
@@ -94,6 +108,10 @@ int main(int argc, char* argv[])
             input[i] = buffer.getSamples()[i];
         }
         fft_calculation = std::make_unique<FFTCalculation>(input, output, buffer.getSampleRate());
+
+        sf::Sound sound;
+        sound.setBuffer(buffer);
+        sound.play();
     }
     else
     {
@@ -186,12 +204,14 @@ int main(int argc, char* argv[])
         };
         window.draw(line, 2, sf::Lines);
 
-        for (unsigned int i = time_offset; i < (input.size() / 2)-1; i++)
+        int sine_offset = 0;
+
+        for (unsigned int i = time_offset; i < (input.size() / 4)-1; i++)
         {
-            constexpr double WAVE_SCALE = 1000;
+            constexpr double WAVE_SCALE = 500;
             sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-input[i]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(255, 0, 0)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-input[i+1]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(255, 0, 0))
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-input[i]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0 + sine_offset), sf::Color(255, 0, 0)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-input[i+1]/WAVE_SCALE-amplitude_offset)/zoom + window_size.y / 2.0 + sine_offset), sf::Color(255, 0, 0))
             };
             window.draw(line, 2, sf::Lines);
         }
@@ -215,6 +235,15 @@ int main(int argc, char* argv[])
                 text.setPosition((i-time_offset)/zoom, 10);
                 window.draw(text);
             }
+        }
+
+        for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)); i++)
+        {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (output[i].imag()-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(0, 0, 255)),
+                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (output[i+1].imag()-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(0, 0, 255))
+            };
+            window.draw(line, 2, sf::Lines);
         }
 
         window.display();

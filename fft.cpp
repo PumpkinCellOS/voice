@@ -3,6 +3,7 @@
 #include "math.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace fft
 {
@@ -40,13 +41,15 @@ void synthesize(vector<fft::DoubleComplex>& data)
 {
     double n = data.size();
     double n2 = n * n;
-    data[0] = fft::DoubleComplex(10.0 * log10(data[0].real() * data[0].real() / n2), data[0].imag());
-    data[n / 2] = fft::DoubleComplex(10.0 * log10(data[1].real() * data[1].real() / n2), data[n/2].imag());
+    data[0] = fft::DoubleComplex(10.0 * log10(data[0].real() * data[0].real() / n2), 10.0 * log10(data[0].imag() * data[0].imag() / n2));
+    data[n / 2] = fft::DoubleComplex(10.0 * log10(data[1].real() * data[1].real() / n2), 10.0 * log10(data[1].imag() * data[1].imag() / n2));
     for (int i = 1; i < n / 2; i++)
     {
-        double val = data[i * 2].real() * data[i * 2].real() + data[i * 2 + 1].real() * data[i * 2 + 1].real();
-        val /= n2;
-        data[i] = fft::DoubleComplex(10.0 * log10(val), data[i].imag());
+        double val1 = data[i * 2].real() * data[i * 2].real() + data[i * 2 + 1].real() * data[i * 2 + 1].real();
+        double val2 = data[i * 2].imag() * data[i * 2].imag() + data[i * 2 + 1].imag() * data[i * 2 + 1].imag();
+        val1 /= n2;
+        val2 /= n2;
+        data[i] = fft::DoubleComplex(10.0 * log10(val1), 10.0 * log10(val2));
     }
 
     // Clamp everything to 0.
@@ -56,4 +59,26 @@ void synthesize(vector<fft::DoubleComplex>& data)
     }
 }
 
+void deriative(vector<complex<double>>& x)
+    {
+        int8_t condition = 0; // 0 for decrease, 1 for increase
+
+        for(unsigned int i = 1; i < x.size()/2; i++){
+            if(x[i].real() < x[i+1].real() && condition == -1){
+                std::cout << "Increase: " << i << ", Value: " << x[i].real() << std::endl;
+                condition = 1;
+            }
+
+            if(x[i].real() > x[i+1].real() && condition == 1){
+                std::cout << "Peak: " << i * 1.345895 << ", Value: " << x[i].real() << ", i = " << i << std::endl;
+                condition = 0;
+            }
+
+            if((x[i].real() == 0 && condition == 0) || (x[i].real() < x[i+1].real() && condition == 0)){
+                std::cout << "Decrease: " << i << ", Value: " << x[i].real() << std::endl;
+                condition = -1;
+            }
+        }
+
+    }
 }
