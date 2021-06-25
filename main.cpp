@@ -23,17 +23,17 @@ struct Sine
 };
 
 constexpr Sine generated_sines[] = {
-    {1000, 0, 500},
-    {2000, 0, 1000},
-    {3000, 0, 1500},
-    {4000, 0, 2000},
-    {5000, 0, 2500},
+    {1500, 0, 500},
+    {2100, 0, 1000},
+    {3800, 0, 1500},
+    {4600, 0, 2000},
+    {5900, 0, 2500},
     {6000, 0, 3000},
-    {7000, 0, 3500},
-    {8000, 0, 4000},
-    {9000, 0, 4500},
-    {10000, 0, 5000},
-    {11000, 0, 5500}
+    {7200, 0, 3500},
+    {8200, 0, 4000},
+    {9400, 0, 4500},
+    {10500, 0, 5000},
+    {11700, 0, 5500}
 };
 
 class FFTCalculation
@@ -61,7 +61,7 @@ void FFTCalculation::calculate()
     fft::synthesize(m_output);
     m_output.resize(m_output.size()/2);
 
-    fft::deriative(m_output);
+    fft::derivative(m_output);
 }
 
 int main(int argc, char* argv[])
@@ -242,6 +242,30 @@ int main(int argc, char* argv[])
                 sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (output[i+1].imag()-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(0, 0, 255))
             };
             window.draw(line, 2, sf::Lines);
+        }
+
+        for(unsigned int i = 0; i < fft::peaks.size(); i++){
+            if(i % 3 == 1){
+                sf::Text text(to_string(int(fft::peaks[i]*Constant)), font, 12);
+                text.setStyle(sf::Text::Bold);
+                text.setFillColor(sf::Color::Green);
+                text.setPosition((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom + (1 / zoom) * 12, (-output[fft::peaks[i]].real() - amplitude_offset) / zoom + window_size.y / 2.0 - 20);
+                window.draw(text);
+            }else if(i % 3 == 2)
+            {
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, 0), sf::Color(192, 192, 192)),
+                    sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, window_size.y), sf::Color(192, 192, 192))
+                };
+                window.draw(line, 2, sf::Lines);
+            }else if(i % 3 == 0)
+            {
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, 0), sf::Color::Blue),
+                    sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, window_size.y), sf::Color::Blue)
+                };
+                window.draw(line, 2, sf::Lines);
+            }
         }
 
         window.display();

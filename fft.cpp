@@ -60,27 +60,32 @@ void synthesize(vector<DoubleComplex>& data)
     }
 }
 
-void deriative(vector<complex<double>>& x)
-{
-    int8_t condition = 0; // 0 for decrease, 1 for increase
+vector<int> peaks;
 
-    for(unsigned int i = 1; i < x.size()/2; i++) {
-        if(x[i].real() < x[i+1].real() && condition == -1) {
-            std::cout << "Increase: " << i << ", Value: " << x[i].real() << std::endl;
-            condition = 1;
+void derivative(vector<complex<double>>& x)
+    {
+        int8_t condition = -1; // 0 for decrease, 1 for increase
+
+        for(unsigned int i = 1; i < x.size()/2; i++){
+            if(x[i].real() < x[i+1].real() && condition == -1){
+                std::cout << "Increase: " << i << ", Value: " << x[i].real() << std::endl;
+                fft::peaks.push_back(i + 16);
+                condition = 1;
+            }
+
+            if(x[i].real() > x[i+1].real() && condition == 1 && x[i].real() >= 10){
+                std::cout << "Peak: " << i * Constant << ", Value: " << x[i].real() << ", i = " << i << std::endl;
+                fft::peaks.push_back(i);
+                condition = 0;
+            }
+
+            if((x[i].real() == 0 && condition == 0) || (x[i].real() < x[i+1].real() && condition == 0)){
+                std::cout << "Decrease: " << i << ", Value: " << x[i].real() << std::endl;
+                fft::peaks.push_back(i + 16);
+                condition = -1;
+            }
         }
 
-        if(x[i].real() > x[i+1].real() && condition == 1) {
-            std::cout << "Peak: " << i * 1.345895 << ", Value: " << x[i].real() << ", i = " << i << std::endl;
-            condition = 0;
-        }
-
-        if((x[i].real() == 0 && condition == 0) || (x[i].real() < x[i+1].real() && condition == 0)) {
-            std::cout << "Decrease: " << i << ", Value: " << x[i].real() << std::endl;
-            condition = -1;
-        }
     }
-
-}
 
 }
