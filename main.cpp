@@ -22,7 +22,7 @@ struct Sine
     }
 };
 
-constexpr Sine generated_sines[] = {
+constexpr Sine generated_sines[] = { // can support up to 11 individual sine waves.
     {1500, 0, 5000},
     {2100, 0, 1000},
     {3800, 0, 1500},
