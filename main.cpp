@@ -90,10 +90,6 @@ int main(int argc, char* argv[])
         }
         fft_calculation = std::make_unique<FFTCalculation>(input, output, generated_sample_rate);
         buffer.loadFromSamples(input.data(), input.size(), 1, 44100);
-
-        sf::Sound sound;
-        sound.setBuffer(buffer);
-        sound.play();
     }
     else if (argc == 2)
     {
@@ -108,16 +104,18 @@ int main(int argc, char* argv[])
             input[i] = buffer.getSamples()[i];
         }
         fft_calculation = std::make_unique<FFTCalculation>(input, output, buffer.getSampleRate());
-
-        sf::Sound sound;
-        sound.setBuffer(buffer);
-        sound.play();
     }
     else
     {
         std::cout << "Usage: Voice [sound file]" << std::endl;
         return 1;
     }
+
+    // Play the sound
+    // TODO: this should be configurable
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+    sound.play();
 
     // Calculate
     fft_calculation->calculate();
