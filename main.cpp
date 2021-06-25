@@ -23,7 +23,7 @@ struct Sine
 };
 
 constexpr Sine generated_sines[] = {
-    {1500, 0, 500},
+    {1500, 0, 5000},
     {2100, 0, 1000},
     {3800, 0, 1500},
     {4600, 0, 2000},
@@ -127,6 +127,14 @@ int main(int argc, char* argv[])
     float amplitude_offset = 0;
     float zoom = 1;
 
+    int8_t snd = 1;
+    int8_t period = 1;
+    int8_t axis = 1;
+    int8_t bounds = 1;
+    int8_t real_fourier = 1;
+    int8_t imag_fourier = 1;
+    int8_t scale = 1;
+
     bool dragging = false;
     sf::Vector2i lastMousePos;
 
@@ -156,6 +164,20 @@ int main(int argc, char* argv[])
                     amplitude_offset+=30;
                 else if (event.key.code == sf::Keyboard::S)
                     amplitude_offset-=30;
+                else if(event.key.code == sf::Keyboard::Num1)
+                    snd *= -1;
+                else if(event.key.code == sf::Keyboard::Num2)
+                    period *= -1;
+                else if(event.key.code == sf::Keyboard::Num3)
+                    axis *= -1;
+                else if(event.key.code == sf::Keyboard::Num4)
+                    bounds *= -1;
+                else if(event.key.code == sf::Keyboard::Num5)
+                    real_fourier *= -1;
+                else if(event.key.code == sf::Keyboard::Num6)
+                    imag_fourier *= -1;
+                else if(event.key.code == sf::Keyboard::Num7)
+                    scale *= -1;
             }
             else if (event.type == sf::Event::MouseWheelScrolled)
             {
@@ -195,16 +217,17 @@ int main(int argc, char* argv[])
 
         window.clear();
 
-        const sf::Color COLOR_GRAY(100, 100, 100);
-        sf::Vertex line[] = {
-            sf::Vertex(sf::Vector2f(0, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY),
-            sf::Vertex(sf::Vector2f(1920, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY)
-        };
-        window.draw(line, 2, sf::Lines);
-
+        if(axis == 1){
+            const sf::Color COLOR_GRAY(100, 100, 100);
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(0, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY),
+                sf::Vertex(sf::Vector2f(1920, -amplitude_offset/zoom + window_size.y / 2.0), COLOR_GRAY)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
         int sine_offset = 0;
 
-        for (unsigned int i = time_offset; i < (input.size() / 4)-1; i++)
+        for (unsigned int i = time_offset; i < (input.size() / 4)-1 && snd == 1; i++)
         {
             constexpr double WAVE_SCALE = 500;
             sf::Vertex line[] = {
@@ -219,13 +242,14 @@ int main(int argc, char* argv[])
         size_t step = std::max(static_cast<size_t>(1), displayed_samples / (window_size.x / label_spacing));
         for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)); i++)
         {
-            sf::Vertex line[] = {
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom + window_size.y / 2.0)),
-                sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-output[i+1].real()-amplitude_offset)/zoom + window_size.y / 2.0))
-            };
-            window.draw(line, 2, sf::Lines);
-
-            if (i % step == 0)
+            if(real_fourier == 1){
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (-output[i].real()-amplitude_offset)/zoom + window_size.y / 2.0)),
+                    sf::Vertex(sf::Vector2f((i-time_offset)/zoom+1, (-output[i+1].real()-amplitude_offset)/zoom + window_size.y / 2.0))
+                };
+                window.draw(line, 2, sf::Lines);
+            }
+            if (i % step == 0 && scale == 1)
             {
                 sf::Text text(to_string(static_cast<unsigned>(i / (static_cast<double>(sample_rate) / (sample_count / sqrt(2))))), font, 12);
                 text.setStyle(sf::Text::Bold);
@@ -235,7 +259,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)); i++)
+        for (size_t i = time_offset; i < std::min(sample_count/2, static_cast<size_t>(time_offset + displayed_samples)) && imag_fourier == 1; i++)
         {
             sf::Vertex line[] = {
                 sf::Vertex(sf::Vector2f((i-time_offset)/zoom, (output[i].imag()-amplitude_offset)/zoom + window_size.y / 2.0), sf::Color(0, 0, 255)),
@@ -245,20 +269,20 @@ int main(int argc, char* argv[])
         }
 
         for(unsigned int i = 0; i < fft::peaks.size(); i++){
-            if(i % 3 == 1){
+            if(i % 3 == 1 && real_fourier == 1){
                 sf::Text text(to_string(int(fft::peaks[i]*Constant)), font, 12);
                 text.setStyle(sf::Text::Bold);
                 text.setFillColor(sf::Color::Green);
                 text.setPosition((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom + (1 / zoom) * 12, (-output[fft::peaks[i]].real() - amplitude_offset) / zoom + window_size.y / 2.0 - 20);
                 window.draw(text);
-            }else if(i % 3 == 2)
+            }else if(i % 3 == 2 && bounds == 1)
             {
                 sf::Vertex line[] = {
                     sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, 0), sf::Color(192, 192, 192)),
                     sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, window_size.y), sf::Color(192, 192, 192))
                 };
                 window.draw(line, 2, sf::Lines);
-            }else if(i % 3 == 0)
+            }else if(i % 3 == 0 && bounds == 1)
             {
                 sf::Vertex line[] = {
                     sf::Vertex(sf::Vector2f((fft::peaks[i] - time_offset - to_string(fft::peaks[i]).size()*4) / zoom, 0), sf::Color::Blue),
@@ -267,8 +291,26 @@ int main(int argc, char* argv[])
                 window.draw(line, 2, sf::Lines);
             }
         }
+        int t = 0;
+        for(unsigned int i = 1; i < input.size() && period == 1; i++){
+            if(input[i] == input[t]){
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f((i - time_offset) / zoom, (-amplitude_offset - 100) / zoom + window_size.y / 2.0), sf::Color(255, 0, 255)),
+                    sf::Vertex(sf::Vector2f((i - time_offset) / zoom, (-amplitude_offset + 100) / zoom + window_size.y / 2.0), sf::Color(255, 0, 255))
+                };
+                window.draw(line, 2, sf::Lines);
+                t = i;
+            }
+        }
+
+        sf::Text text("Press for enable / disable contents: \n 1   -   sound wave \n 2   -   periodic lines \n 3   -   x axis \n 4   -   Fourier bounds \n 5   -   real Fourier graph \n 6   -   imag Fourier graph \n 7   -   num scale", font, 20);
+        text.setStyle(sf::Text::Bold);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(20, 50);
+        window.draw(text);
 
         window.display();
     }
+
     return 0;
 }
